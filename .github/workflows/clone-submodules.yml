@@ -135,9 +135,6 @@ jobs:
               repo_links=$(cat README.md | grep -A 100 "$section_title" | grep -A 100 "\`\`\`" | grep -B 100 "\`\`\`" | grep -E "^(https://github.com|git@github.com)")
             fi
             
-            # 清理链接，移除所有反引号
-            repo_links=$(echo "$repo_links" | tr -d '\`')
-            
             # 如果是 tools 目录，手动添加 awesome-mcp-security 仓库
             if [ "$dir" = "tools" ]; then
               echo "为 tools 目录添加 awesome-mcp-security 仓库"
@@ -146,8 +143,8 @@ jobs:
               fi
             fi
             
-            # 清理链接，移除可能的反引号和空白字符
-            repo_links=$(echo "$repo_links" | tr -d '`' | sed 's/^[ \t]*//;s/[ \t]*$//')
+            # 清理链接，移除可能的反引号、回车符、换行符和空白字符
+            repo_links=$(echo "$repo_links" | tr -d '\`' | tr -d '\r' | sed 's/^[ \t]*//;s/[ \t]*$//')
             
             # 显示找到的链接
             echo "找到以下仓库链接:"
