@@ -1,166 +1,111 @@
-name: Collect CTF Resources
+name: 收集CTF资源
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   # 允许手动触发工作流
   workflow_dispatch:
   # 每周一自动运行
   schedule:
-    - cron: '0 0 * * 1'
+    - cron: "0 0 * * 1"
 
 jobs:
-  clone-repos:
+  克隆仓库:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Checkout repository
+      - name: 检出仓库
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: false
 
-      - name: Setup directories
+      - name: 设置目录和配置Git
         run: |
-          mkdir -p writeups
-          mkdir -p wiki
-          mkdir -p tools
+          # 定义资源类型配置
+          declare -A resource_configs=(
+            ["writeups"]="2. Writeups 资源"
+            ["wiki"]="1. Wiki 资源"
+            ["tools"]="3. Tools 工具"
+          )
 
-      - name: Configure Git
-        run: |
+          # 创建所有资源目录
+          for dir in "${!resource_configs[@]}"; do
+            mkdir -p "$dir"
+            echo "已创建目录: $dir"
+          done
+
+          # 配置Git
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
-      - name: Add writeup repositories as submodules
+      - name: 处理仓库子模块
         run: |
-          # 从README.md提取writeup仓库链接并添加为子模块
-          cat README.md | grep -A 100 "2. Writeups 资源" | grep -A 100 "\`\`\`" | grep -B 100 "\`\`\`" | grep -E "^(https://github.com|git@github.com)" | while read -r repo; do
-            if [ ! -z "$repo" ]; then
-              # 清理URL，确保格式正确
-              repo=$(echo $repo | tr -d '\r' | tr -d '\n' | tr -d ' ')
-              
-              # 处理不同格式的URL
-              if [[ "$repo" == git@github.com:* ]]; then
-                # SSH格式: git@github.com:username/repo.git
-                # 提取仓库名称
-                repo_name=$(echo $repo | awk -F':' '{print $2}' | awk -F'/' '{print $NF}' | sed 's/.git$//')
+          # 定义处理仓库链接的函数
+          process_repo_url() {
+            local repo="$1"
+            local target_dir="$2"
+            
+            # 清理URL，确保格式正确
+            repo=$(echo $repo | tr -d '\r' | tr -d '\n' | tr -d ' ')
+            
+            # 处理不同格式的URL
+            if [[ "$repo" == git@github.com:* ]]; then
+              # SSH格式: git@github.com:username/repo.git
+              # 提取仓库名称
+              repo_name=$(echo $repo | awk -F':' '{print $2}' | awk -F'/' '{print $NF}' | sed 's/.git$//')
+              normalized_repo="$repo"
+              # 确保以.git结尾
+              if [[ ! "$normalized_repo" =~ \.git$ ]]; then
+                normalized_repo="${normalized_repo}.git"
+              fi
+            else
+              # HTTPS格式: https://github.com/username/repo.git
+              # 标准化URL格式，确保以.git结尾
+              if [[ ! "$repo" =~ \.git$ ]]; then
+                normalized_repo="${repo}.git"
+              else
                 normalized_repo="$repo"
-                # 确保以.git结尾
-                if [[ ! "$normalized_repo" =~ \.git$ ]]; then
-                  normalized_repo="${normalized_repo}.git"
-                fi
-              else
-                # HTTPS格式: https://github.com/username/repo.git
-                # 标准化URL格式，确保以.git结尾
-                if [[ ! "$repo" =~ \.git$ ]]; then
-                  normalized_repo="${repo}.git"
-                else
-                  normalized_repo="$repo"
-                fi
-                # 提取仓库名称（不带.git后缀）
-                repo_name=$(echo $normalized_repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
               fi
-              
-              echo "Adding $repo_name from $normalized_repo as submodule"
-              
-              # 检查子模块是否已存在（考虑不同URL格式）
-              repo_without_git=$(echo $normalized_repo | sed 's/.git$//')
-              if grep -q "$normalized_repo" .gitmodules 2>/dev/null || grep -q "$repo_without_git" .gitmodules 2>/dev/null; then
-                echo "Submodule $repo_name already exists, skipping"
-              else
-                git submodule add --depth=1 $normalized_repo writeups/$repo_name || echo "Failed to add $repo_name, may already exist or invalid"
-              fi
+              # 提取仓库名称（不带.git后缀）
+              repo_name=$(echo $normalized_repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
             fi
-          done
+            
+            echo "正在添加 $repo_name 从 $normalized_repo 作为子模块到 $target_dir/ 目录"
+            
+            # 检查子模块是否已存在（考虑不同URL格式）
+            repo_without_git=$(echo $normalized_repo | sed 's/.git$//')
+            if grep -q "$normalized_repo" .gitmodules 2>/dev/null || grep -q "$repo_without_git" .gitmodules 2>/dev/null; then
+              echo "子模块 $repo_name 已存在，跳过"
+            else
+              git submodule add --depth=1 $normalized_repo $target_dir/$repo_name || echo "添加 $repo_name 失败，可能已存在或无效"
+            fi
+          }
 
-      - name: Add wiki repositories as submodules
-        run: |
-          # 从README.md提取wiki仓库链接并添加为子模块
-          cat README.md | grep -A 100 "1. Wiki 资源" | grep -A 100 "\`\`\`" | grep -B 100 "\`\`\`" | grep -E "^(https://github.com|git@github.com)" | while read -r repo; do
-            if [ ! -z "$repo" ]; then
-              # 清理URL，确保格式正确
-              repo=$(echo $repo | tr -d '\r' | tr -d '\n' | tr -d ' ')
-              
-              # 处理不同格式的URL
-              if [[ "$repo" == git@github.com:* ]]; then
-                # SSH格式: git@github.com:username/repo.git
-                # 提取仓库名称
-                repo_name=$(echo $repo | awk -F':' '{print $2}' | awk -F'/' '{print $NF}' | sed 's/.git$//')
-                normalized_repo="$repo"
-                # 确保以.git结尾
-                if [[ ! "$normalized_repo" =~ \.git$ ]]; then
-                  normalized_repo="${normalized_repo}.git"
-                fi
-              else
-                # HTTPS格式: https://github.com/username/repo.git
-                # 标准化URL格式，确保以.git结尾
-                if [[ ! "$repo" =~ \.git$ ]]; then
-                  normalized_repo="${repo}.git"
-                else
-                  normalized_repo="$repo"
-                fi
-                # 提取仓库名称（不带.git后缀）
-                repo_name=$(echo $normalized_repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
-              fi
-              
-              echo "Adding $repo_name from $normalized_repo as submodule"
-              
-              # 检查子模块是否已存在（考虑不同URL格式）
-              repo_without_git=$(echo $normalized_repo | sed 's/.git$//')
-              if grep -q "$normalized_repo" .gitmodules 2>/dev/null || grep -q "$repo_without_git" .gitmodules 2>/dev/null; then
-                echo "Submodule $repo_name already exists, skipping"
-              else
-                git submodule add --depth=1 $normalized_repo wiki/$repo_name || echo "Failed to add $repo_name, may already exist or invalid"
-              fi
-            fi
-          done
+          # 定义资源类型配置
+          declare -A resource_configs=(
+            ["writeups"]="2. Writeups 资源"
+            ["wiki"]="1. Wiki 资源"
+            ["tools"]="3. Tools 工具"
+          )
           
-      - name: Add tools repositories as submodules
-        run: |
-          # 从README.md提取tools仓库链接并添加为子模块
-          cat README.md | grep -A 100 "3. Tools" | grep -A 100 "\`\`\`" | grep -B 100 "\`\`\`" | grep -E "^(https://github.com|git@github.com)" | while read -r repo; do
-            if [ ! -z "$repo" ]; then
-              # 清理URL，确保格式正确
-              repo=$(echo $repo | tr -d '\r' | tr -d '\n' | tr -d ' ')
-              
-              # 处理不同格式的URL
-              if [[ "$repo" == git@github.com:* ]]; then
-                # SSH格式: git@github.com:username/repo.git
-                # 提取仓库名称
-                repo_name=$(echo $repo | awk -F':' '{print $2}' | awk -F'/' '{print $NF}' | sed 's/.git$//')
-                normalized_repo="$repo"
-                # 确保以.git结尾
-                if [[ ! "$normalized_repo" =~ \.git$ ]]; then
-                  normalized_repo="${normalized_repo}.git"
-                fi
-              else
-                # HTTPS格式: https://github.com/username/repo.git
-                # 标准化URL格式，确保以.git结尾
-                if [[ ! "$repo" =~ \.git$ ]]; then
-                  normalized_repo="${repo}.git"
-                else
-                  normalized_repo="$repo"
-                fi
-                # 提取仓库名称（不带.git后缀）
-                repo_name=$(echo $normalized_repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
+          # 处理每种资源类型
+          for dir in "${!resource_configs[@]}"; do
+            section_title="${resource_configs[$dir]}"
+            echo "正在处理 $dir 仓库，对应标题: $section_title"
+            
+            # 从README.md提取仓库链接并添加为子模块
+            cat README.md | grep -A 100 "$section_title" | grep -A 100 "\`\`\`" | grep -B 100 "\`\`\`" | grep -E "^(https://github.com|git@github.com)" | while read -r repo; do
+              if [ ! -z "$repo" ]; then
+                process_repo_url "$repo" "$dir"
               fi
-              
-              echo "Adding $repo_name from $normalized_repo as submodule"
-              
-              # 检查子模块是否已存在（考虑不同URL格式）
-              repo_without_git=$(echo $normalized_repo | sed 's/.git$//')
-              if grep -q "$normalized_repo" .gitmodules 2>/dev/null || grep -q "$repo_without_git" .gitmodules 2>/dev/null; then
-                echo "Submodule $repo_name already exists, skipping"
-              else
-                git submodule add --depth=1 $normalized_repo tools/$repo_name || echo "Failed to add $repo_name, may already exist or invalid"
-              fi
-            fi
+            done
           done
 
-      - name: Initialize and update submodules
+      - name: 初始化和更新子模块
         run: |
           # 只初始化直接子模块，不递归更新
           git submodule update --init --depth=1
@@ -168,30 +113,30 @@ jobs:
           # 对于每个子模块单独处理，避免递归错误
           git submodule foreach 'git submodule update --init --depth=1 || true'
           
-      - name: Commit changes if any new submodules were added
+      - name: 提交新增的子模块更改
         run: |
           # 显示子模块状态
-          echo "Current submodule status:"
+          echo "当前子模块状态:"
           git submodule status
           
           # 检查是否有.gitmodules文件
           if [ -f ".gitmodules" ]; then
-            echo "Content of .gitmodules file:"
+            echo ".gitmodules 文件内容:"
             cat .gitmodules
           else
-            echo "Warning: .gitmodules file does not exist"
+            echo "警告: .gitmodules 文件不存在"
           fi
           
           # 提交更改
           if [[ -n "$(git status --porcelain)" ]]; then
-            echo "Changes detected, committing..."
+            echo "检测到更改，正在提交..."
             git add .
-            git commit -m "Add new submodules via GitHub Actions"
+            git commit -m "通过 GitHub Actions 添加新的子模块"
             git push || {
-              echo "Failed to push changes, trying to pull first"
+              echo "推送更改失败，尝试先拉取最新代码"
               git pull --rebase
               git push
             }
           else
-            echo "No changes to commit"
+            echo "没有需要提交的更改"
           fi
