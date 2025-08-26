@@ -49,8 +49,8 @@ jobs:
             local repo="$1"
             local target_dir="$2"
             
-            # 清理URL，确保格式正确
-            repo=$(echo $repo | tr -d '\r' | tr -d '\n' | tr -d ' ')
+            # 清理URL，确保格式正确，移除反引号和空白字符
+            repo=$(echo $repo | tr -d '\r' | tr -d '\n' | tr -d ' ' | tr -d '`')
             
             # 处理不同格式的URL
             if [[ "$repo" == git@github.com:* ]]; then
@@ -122,6 +122,9 @@ jobs:
               repo_links=$(cat README.md | grep -A 100 "$section_title" | grep -A 100 "\`\`\`" | grep -B 100 "\`\`\`" | grep -E "^(https://github.com|git@github.com)")
             fi
             
+            # 清理链接，移除可能的反引号
+            repo_links=$(echo "$repo_links" | tr -d '`')
+            
             # 显示找到的链接
             echo "找到以下仓库链接:"
             echo "$repo_links"
@@ -129,6 +132,8 @@ jobs:
             # 处理每个仓库链接
             echo "$repo_links" | while read -r repo; do
               if [ ! -z "$repo" ]; then
+                # 清理链接，确保没有反引号和多余空格
+                repo=$(echo "$repo" | tr -d '`' | tr -d '\r' | tr -d '\n' | xargs)
                 echo "处理仓库链接: $repo"
                 # 特殊处理已知有嵌套子模块问题的仓库
                 if [[ "$repo" == *"bl4de/ctf"* ]]; then
