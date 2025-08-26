@@ -135,6 +135,9 @@ jobs:
               repo_links=$(cat README.md | grep -A 100 "$section_title" | grep -A 100 "\`\`\`" | grep -B 100 "\`\`\`" | grep -E "^(https://github.com|git@github.com)")
             fi
             
+            # 清理链接，移除所有反引号
+            repo_links=$(echo "$repo_links" | tr -d '\`')
+            
             # 如果是 tools 目录，手动添加 awesome-mcp-security 仓库
             if [ "$dir" = "tools" ]; then
               echo "为 tools 目录添加 awesome-mcp-security 仓库"
