@@ -1,6 +1,6 @@
-# CTF-Writeups 收集
+# CTF-Resource-Collector
 
-本仓库使用 GitHub Actions 自动浅克隆（depth=1）CTF 相关的仓库，包括 writeups 和 wiki 资源。
+本仓库使用 GitHub Actions 自动浅克隆（depth=1）CTF 相关的仓库资源，包括 writeups 和 wiki 资源，实现自动化收集和更新。
 
 ## 自动克隆
 

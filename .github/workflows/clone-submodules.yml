@@ -1,4 +1,4 @@
-name: Clone CTF Repositories
+name: Collect CTF Resources
 
 on:
   push:

@@ -1,8 +1,8 @@
-# GitHub Actions 配置
+# CTF-Resource-Collector GitHub Actions 配置
 
-## 自动克隆子模块
+## 自动资源收集
 
-本目录包含GitHub Actions工作流配置，用于自动浅克隆（depth=1）CTF相关的仓库资源。
+本目录包含GitHub Actions工作流配置，用于自动浅克隆（depth=1）CTF相关的仓库资源，实现资源的自动化收集和更新。
 
 ### 工作流文件
 
