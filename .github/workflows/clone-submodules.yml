@@ -14,33 +14,57 @@ on:
 jobs:
   clone-repos:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: false
 
       - name: Setup directories
         run: |
           mkdir -p writeups
           mkdir -p wiki
 
-      - name: Clone writeup repositories
+      - name: Configure Git
         run: |
-          # 从README.md提取writeup仓库链接并克隆
-          cat README.md | grep -A 100 "1. writeups" | grep -B 100 "2. wiki" | grep "https://github.com" | while read -r repo; do
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Add writeup repositories as submodules
+        run: |
+          # 从README.md提取writeup仓库链接并添加为子模块
+          cat README.md | grep -A 100 "1. Writeups" | grep -B 100 "2. Wiki" | grep "https://github.com" | while read -r repo; do
             if [ ! -z "$repo" ]; then
               repo_name=$(echo $repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
-              echo "Cloning $repo_name from $repo"
-              git clone --depth=1 $repo writeups/$repo_name
+              echo "Adding $repo_name from $repo as submodule"
+              git submodule add --depth=1 $repo writeups/$repo_name || echo "Failed to add $repo_name, may already exist or invalid"
             fi
           done
 
-      - name: Clone wiki repositories
+      - name: Add wiki repositories as submodules
         run: |
-          # 从README.md提取wiki仓库链接并克隆
-          cat README.md | grep -A 100 "2. wiki" | grep "https://github.com" | while read -r repo; do
+          # 从README.md提取wiki仓库链接并添加为子模块
+          cat README.md | grep -A 100 "2. Wiki" | grep "https://github.com" | while read -r repo; do
             if [ ! -z "$repo" ]; then
               repo_name=$(echo $repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
-              echo "Cloning $repo_name from $repo"
-              git clone --depth=1 $repo wiki/$repo_name
+              echo "Adding $repo_name from $repo as submodule"
+              git submodule add --depth=1 $repo wiki/$repo_name || echo "Failed to add $repo_name, may already exist or invalid"
             fi
           done
+          
+      - name: Initialize and update submodules
+        run: |
+          git submodule update --init --recursive --depth=1
+          
+      - name: Commit changes if any new submodules were added
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git add .
+            git commit -m "Add new submodules via GitHub Actions"
+            git push
+          else
+            echo "No changes to commit"
+          fi
