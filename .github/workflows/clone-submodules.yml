@@ -57,9 +57,22 @@ jobs:
           # 从README.md提取wiki仓库链接并添加为子模块
           cat README.md | grep -A 100 "2. Wiki" | grep "https://github.com" | while read -r repo; do
             if [ ! -z "$repo" ]; then
+              # 清理URL，确保格式正确
+              repo=$(echo $repo | tr -d '\r' | tr -d '\n' | tr -d ' ')
+              # 确保URL以.git结尾
+              if [[ ! "$repo" =~ \.git$ ]]; then
+                repo="${repo}.git"
+              fi
+              
               repo_name=$(echo $repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
               echo "Adding $repo_name from $repo as submodule"
-              git submodule add --depth=1 $repo wiki/$repo_name || echo "Failed to add $repo_name, may already exist or invalid"
+              
+              # 检查子模块是否已存在
+              if grep -q "$repo" .gitmodules 2>/dev/null; then
+                echo "Submodule $repo_name already exists, skipping"
+              else
+                git submodule add --depth=1 $repo wiki/$repo_name || echo "Failed to add $repo_name, may already exist or invalid"
+              fi
             fi
           done
           
