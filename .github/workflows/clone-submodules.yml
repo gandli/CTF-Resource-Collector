@@ -127,12 +127,12 @@ jobs:
             echo "从README.md提取 $section_title 部分的仓库链接..."
             
             # 使用更可靠的方式提取仓库链接
-            repo_links=$(awk -v section="$section_title" -v RS="##" '$0 ~ section {p=1; next} p && /^##/ {p=0} p' README.md | grep -o -E 'https://github.com[^ ]+|git@github.com:[^ ]+')
+            repo_links=$(awk -v section="$section_title" -v RS="##" '$0 ~ section {p=1; next} p && /^##/ {p=0} p' README.md | grep -o -E 'https://github.com[^` ]+|git@github.com:[^` ]+')
             
             # 如果上面的方法失败，尝试备用方法
             if [ -z "$repo_links" ]; then
               echo "使用备用方法提取仓库链接..."
-              repo_links=$(cat README.md | grep -A 100 "$section_title" | grep -A 100 "\`\`\`" | grep -B 100 "\`\`\`" | grep -E "^(https://github.com|git@github.com)")
+              repo_links=$(cat README.md | grep -A 100 "$section_title" | grep -A 100 "\`\`\`" | grep -B 100 "\`\`\`" | grep -E "^(https://github.com|git@github.com)" | tr -d '`')
             fi
             
             # 如果是 tools 目录，手动添加 awesome-mcp-security 仓库
