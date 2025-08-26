@@ -80,4 +80,14 @@ https://github.com/AravGarg/CTFarchives.git
 https://github.com/datajerk/ctf-write-ups.git
 https://github.com/JiaweiHawk/pwn.git
 https://github.com/XDSEC/moeCTF_2021.git
+https://github.com/Ignitetechnologies/HackTheBox-CTF-Writeups.git
+https://github.com/susers/Writeups.git
+https://github.com/bl4de/ctf.git
+https://github.com/testert1ng/hacker101-ctf.git
+```
+
+## 3. Tools 工具
+
+```
+https://github.com/Puliczek/awesome-mcp-security.git
 ```
