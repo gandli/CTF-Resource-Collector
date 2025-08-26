@@ -27,8 +27,8 @@ jobs:
         run: |
           # 定义资源类型配置
           declare -A resource_configs=(
-            ["writeups"]="2. Writeups 资源"
             ["wiki"]="1. Wiki 资源"
+            ["writeups"]="2. Writeups 资源"
             ["tools"]="3. Tools 工具"
           )
 
@@ -82,7 +82,7 @@ jobs:
               echo "子模块 $repo_name 已存在，跳过"
             else
               # 添加子模块时禁用递归，避免嵌套子模块问题
-              echo "执行: git submodule add --depth=1 --no-recursive $normalized_repo $target_dir/$repo_name"
+              echo "执行: git submodule add --depth=1 --no-recursive '$normalized_repo' '$target_dir/$repo_name'"
               
               # 确保目标目录存在
               mkdir -p "$target_dir"
