@@ -74,7 +74,7 @@ https://github.com/XDSEC/moeCTF_2021.git
 ## 2. Wiki 资源
 
 ```
-https://github.com/ctf-wiki/ctf-wiki
-https://github.com/Antel0p3/HITSZ-CTF-Wiki/
-https://github.com/ReAbout/web-sec
+https://github.com/ctf-wiki/ctf-wiki.git
+https://github.com/Antel0p3/HITSZ-CTF-Wiki.git
+https://github.com/ReAbout/web-sec.git
 ```
