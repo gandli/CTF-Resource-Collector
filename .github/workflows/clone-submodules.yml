@@ -134,6 +134,40 @@ jobs:
           # 禁用递归子模块初始化，避免缺少URL的错误
           git config --global submodule.recurse false
           
+          # 对于没有标记为 .no-recursive 的子模块，尝试安全地初始化其子模块
+          echo "安全地初始化没有标记为 .no-recursive 的子模块的嵌套子模块"
+          git submodule foreach '
+            if [ ! -f .no-recursive ] && [ -f .gitmodules ]; then
+              echo "尝试初始化 $(pwd) 的子模块"
+              git submodule update --init --depth=1 || echo "初始化 $(pwd) 的子模块失败，但继续处理"
+            fi
+          '
+          
+      - name: 清理问题子模块
+        run: |
+          # 检查是否有问题子模块（缺少URL的子模块）
+          echo "检查问题子模块..."
+          problem_submodules=$(git config --file .gitmodules --get-regexp path | awk '{print $2}' | while read path; do
+            if ! git config --file .gitmodules --get "submodule.$path.url" > /dev/null 2>&1; then
+              echo "$path"
+            fi
+          done)
+          
+          # 如果有问题子模块，从.gitmodules中移除它们
+          if [ ! -z "$problem_submodules" ]; then
+            echo "发现以下问题子模块（缺少URL）:"
+            echo "$problem_submodules"
+            echo "从.gitmodules中移除这些问题子模块..."
+            
+            for path in $problem_submodules; do
+              echo "移除问题子模块: $path"
+              git config --file .gitmodules --remove-section "submodule.$path" || echo "无法移除 $path，可能已不存在"
+              rm -rf "$path"
+            done
+          else
+            echo "未发现问题子模块"
+          fi
+
       - name: 提交新增的子模块更改
         run: |
           # 显示子模块状态
@@ -152,7 +186,7 @@ jobs:
           if [[ -n "$(git status --porcelain)" ]]; then
             echo "检测到更改，正在提交..."
             git add .
-            git commit -m "通过 GitHub Actions 添加新的子模块"
+            git commit -m "通过 GitHub Actions 添加新的子模块并清理问题子模块"
             git push || {
               echo "推送更改失败，尝试先拉取最新代码"
               git pull --rebase
