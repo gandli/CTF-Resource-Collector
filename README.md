@@ -88,6 +88,8 @@ https://github.com/testert1ng/hacker101-ctf.git
 
 ## 3. Tools 工具
 
+> 注意：仓库链接支持多种格式，如 `https://github.com/username/repo.git`、`https://github.com/username/repo` 或 `git@github.com:username/repo.git`（SSH格式），系统会自动处理。
+
 ```
 https://github.com/Puliczek/awesome-mcp-security.git
 ```

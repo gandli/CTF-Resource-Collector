@@ -27,6 +27,7 @@ jobs:
         run: |
           mkdir -p writeups
           mkdir -p wiki
+          mkdir -p tools
 
       - name: Configure Git
         run: |
@@ -117,6 +118,48 @@ jobs:
             fi
           done
           
+      - name: Add tools repositories as submodules
+        run: |
+          # 从README.md提取tools仓库链接并添加为子模块
+          cat README.md | grep -A 100 "3. Tools" | grep -E "(https://github.com|git@github.com)" | while read -r repo; do
+            if [ ! -z "$repo" ]; then
+              # 清理URL，确保格式正确
+              repo=$(echo $repo | tr -d '\r' | tr -d '\n' | tr -d ' ')
+              
+              # 处理不同格式的URL
+              if [[ "$repo" == git@github.com:* ]]; then
+                # SSH格式: git@github.com:username/repo.git
+                # 提取仓库名称
+                repo_name=$(echo $repo | awk -F':' '{print $2}' | awk -F'/' '{print $NF}' | sed 's/.git$//')
+                normalized_repo="$repo"
+                # 确保以.git结尾
+                if [[ ! "$normalized_repo" =~ \.git$ ]]; then
+                  normalized_repo="${normalized_repo}.git"
+                fi
+              else
+                # HTTPS格式: https://github.com/username/repo.git
+                # 标准化URL格式，确保以.git结尾
+                if [[ ! "$repo" =~ \.git$ ]]; then
+                  normalized_repo="${repo}.git"
+                else
+                  normalized_repo="$repo"
+                fi
+                # 提取仓库名称（不带.git后缀）
+                repo_name=$(echo $normalized_repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
+              fi
+              
+              echo "Adding $repo_name from $normalized_repo as submodule"
+              
+              # 检查子模块是否已存在（考虑不同URL格式）
+              repo_without_git=$(echo $normalized_repo | sed 's/.git$//')
+              if grep -q "$normalized_repo" .gitmodules 2>/dev/null || grep -q "$repo_without_git" .gitmodules 2>/dev/null; then
+                echo "Submodule $repo_name already exists, skipping"
+              else
+                git submodule add --depth=1 $normalized_repo tools/$repo_name || echo "Failed to add $repo_name, may already exist or invalid"
+              fi
+            fi
+          done
+
       - name: Initialize and update submodules
         run: |
           # 只初始化直接子模块，不递归更新
