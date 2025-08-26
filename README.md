@@ -1,4 +1,4 @@
-# CTF-Resource-Collector
+# CTF-Resource-Collector [![Collect CTF Resources](https://github.com/gandli/CTF-Resource-Collector/actions/workflows/clone-submodules.yml/badge.svg)](https://github.com/gandli/CTF-Resource-Collector/actions/workflows/clone-submodules.yml)
 
 本仓库使用 GitHub Actions 自动浅克隆（depth=1）CTF 相关的仓库资源，包括 writeups 和 wiki 资源，实现自动化收集和更新。
 

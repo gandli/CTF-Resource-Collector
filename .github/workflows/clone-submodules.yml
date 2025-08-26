@@ -86,10 +86,28 @@ jobs:
           
       - name: Commit changes if any new submodules were added
         run: |
+          # 显示子模块状态
+          echo "Current submodule status:"
+          git submodule status
+          
+          # 检查是否有.gitmodules文件
+          if [ -f ".gitmodules" ]; then
+            echo "Content of .gitmodules file:"
+            cat .gitmodules
+          else
+            echo "Warning: .gitmodules file does not exist"
+          fi
+          
+          # 提交更改
           if [[ -n "$(git status --porcelain)" ]]; then
+            echo "Changes detected, committing..."
             git add .
             git commit -m "Add new submodules via GitHub Actions"
-            git push
+            git push || {
+              echo "Failed to push changes, trying to pull first"
+              git pull --rebase
+              git push
+            }
           else
             echo "No changes to commit"
           fi
