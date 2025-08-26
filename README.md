@@ -60,6 +60,7 @@ git submodule status
 https://github.com/ctf-wiki/ctf-wiki.git
 https://github.com/Antel0p3/HITSZ-CTF-Wiki.git
 https://github.com/ReAbout/web-sec.git
+https://github.com/ProbiusOfficial/Hello-CTF.git
 ```
 
 ## 2. Writeups 资源
