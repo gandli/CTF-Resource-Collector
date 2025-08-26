@@ -78,20 +78,33 @@ jobs:
       - name: Add wiki repositories as submodules
         run: |
           # 从README.md提取wiki仓库链接并添加为子模块
-          cat README.md | grep -A 100 "2. Wiki" | grep "https://github.com" | while read -r repo; do
+          cat README.md | grep -A 100 "2. Wiki" | grep -E "(https://github.com|git@github.com)" | while read -r repo; do
             if [ ! -z "$repo" ]; then
               # 清理URL，确保格式正确
               repo=$(echo $repo | tr -d '\r' | tr -d '\n' | tr -d ' ')
               
-              # 标准化URL格式，确保以.git结尾
-              if [[ ! "$repo" =~ \.git$ ]]; then
-                normalized_repo="${repo}.git"
-              else
+              # 处理不同格式的URL
+              if [[ "$repo" == git@github.com:* ]]; then
+                # SSH格式: git@github.com:username/repo.git
+                # 提取仓库名称
+                repo_name=$(echo $repo | awk -F':' '{print $2}' | awk -F'/' '{print $NF}' | sed 's/.git$//')
                 normalized_repo="$repo"
+                # 确保以.git结尾
+                if [[ ! "$normalized_repo" =~ \.git$ ]]; then
+                  normalized_repo="${normalized_repo}.git"
+                fi
+              else
+                # HTTPS格式: https://github.com/username/repo.git
+                # 标准化URL格式，确保以.git结尾
+                if [[ ! "$repo" =~ \.git$ ]]; then
+                  normalized_repo="${repo}.git"
+                else
+                  normalized_repo="$repo"
+                fi
+                # 提取仓库名称（不带.git后缀）
+                repo_name=$(echo $normalized_repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
               fi
               
-              # 提取仓库名称（不带.git后缀）
-              repo_name=$(echo $normalized_repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
               echo "Adding $repo_name from $normalized_repo as submodule"
               
               # 检查子模块是否已存在（考虑不同URL格式）
