@@ -1,0 +1,46 @@
+name: Clone CTF Repositories
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  # 允许手动触发工作流
+  workflow_dispatch:
+  # 每周一自动运行
+  schedule:
+    - cron: '0 0 * * 1'
+
+jobs:
+  clone-repos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup directories
+        run: |
+          mkdir -p writeups
+          mkdir -p wiki
+
+      - name: Clone writeup repositories
+        run: |
+          # 从README.md提取writeup仓库链接并克隆
+          cat README.md | grep -A 100 "1. writeups" | grep -B 100 "2. wiki" | grep "https://github.com" | while read -r repo; do
+            if [ ! -z "$repo" ]; then
+              repo_name=$(echo $repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
+              echo "Cloning $repo_name from $repo"
+              git clone --depth=1 $repo writeups/$repo_name
+            fi
+          done
+
+      - name: Clone wiki repositories
+        run: |
+          # 从README.md提取wiki仓库链接并克隆
+          cat README.md | grep -A 100 "2. wiki" | grep "https://github.com" | while read -r repo; do
+            if [ ! -z "$repo" ]; then
+              repo_name=$(echo $repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
+              echo "Cloning $repo_name from $repo"
+              git clone --depth=1 $repo wiki/$repo_name
+            fi
+          done
