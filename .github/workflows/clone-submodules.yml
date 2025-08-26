@@ -101,7 +101,7 @@ jobs:
                 fi
                 
                 # 检查是否是因为子模块已存在
-                if grep -q "already exists" /tmp/submodule_error.log; then
+                if echo "$error_output" | grep -q "already exists"; then
                   echo "子模块 $repo_name 已存在，尝试更新"
                   git submodule update --init --depth=1 "$target_dir/$repo_name" || echo "更新子模块失败"
                 fi
