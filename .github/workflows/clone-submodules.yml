@@ -37,7 +37,7 @@ jobs:
       - name: Add writeup repositories as submodules
         run: |
           # 从README.md提取writeup仓库链接并添加为子模块
-          cat README.md | grep -A 100 "1. Writeups" | grep -B 100 "2. Wiki" | grep -E "(https://github.com|git@github.com)" | while read -r repo; do
+          cat README.md | grep -A 100 "1. Writeups" | grep -B 100 "2. Wiki" | grep -A 100 "\`\`\`" | grep -B 100 "\`\`\`" | grep -E "^(https://github.com|git@github.com)" | while read -r repo; do
             if [ ! -z "$repo" ]; then
               # 清理URL，确保格式正确
               repo=$(echo $repo | tr -d '\r' | tr -d '\n' | tr -d ' ')
@@ -79,7 +79,7 @@ jobs:
       - name: Add wiki repositories as submodules
         run: |
           # 从README.md提取wiki仓库链接并添加为子模块
-          cat README.md | grep -A 100 "2. Wiki" | grep -E "(https://github.com|git@github.com)" | while read -r repo; do
+          cat README.md | grep -A 100 "2. Wiki" | grep -A 100 "\`\`\`" | grep -B 100 "\`\`\`" | grep -E "^(https://github.com|git@github.com)" | while read -r repo; do
             if [ ! -z "$repo" ]; then
               # 清理URL，确保格式正确
               repo=$(echo $repo | tr -d '\r' | tr -d '\n' | tr -d ' ')
@@ -121,7 +121,7 @@ jobs:
       - name: Add tools repositories as submodules
         run: |
           # 从README.md提取tools仓库链接并添加为子模块
-          cat README.md | grep -A 100 "3. Tools" | grep -E "(https://github.com|git@github.com)" | while read -r repo; do
+          cat README.md | grep -A 100 "3. Tools" | grep -A 100 "\`\`\`" | grep -B 100 "\`\`\`" | grep -E "^(https://github.com|git@github.com)" | while read -r repo; do
             if [ ! -z "$repo" ]; then
               # 清理URL，确保格式正确
               repo=$(echo $repo | tr -d '\r' | tr -d '\n' | tr -d ' ')
