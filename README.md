@@ -91,6 +91,8 @@ https://github.com/USTC-Hackergame/hackergame2021-writeups.git
 https://github.com/USTC-Hackergame/hackergame2022-writeups.git
 https://github.com/USTC-Hackergame/hackergame2023-writeups.git
 https://github.com/USTC-Hackergame/hackergame2024-writeups.git
+https://github.com/sixstars/ctf.git
+https://github.com/hongriSec/CTF-Training.git
 ```
 
 ## 3. Tools 工具
