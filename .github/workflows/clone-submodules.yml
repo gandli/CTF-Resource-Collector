@@ -81,7 +81,14 @@ jobs:
             if grep -q "$normalized_repo" .gitmodules 2>/dev/null || grep -q "$repo_without_git" .gitmodules 2>/dev/null; then
               echo "子模块 $repo_name 已存在，跳过"
             else
-              git submodule add --depth=1 $normalized_repo $target_dir/$repo_name || echo "添加 $repo_name 失败，可能已存在或无效"
+              # 添加子模块时禁用递归，避免嵌套子模块问题
+              git submodule add --depth=1 --no-recursive $normalized_repo $target_dir/$repo_name || {
+                echo "添加 $repo_name 失败，可能已存在或无效"
+                # 检查是否是因为嵌套子模块问题导致的失败
+                if [ -d "$target_dir/$repo_name" ] && [ -f "$target_dir/$repo_name/.gitmodules" ]; then
+                  echo "警告: $repo_name 包含嵌套子模块，这可能导致问题"
+                fi
+              }
             fi
           }
 
@@ -100,7 +107,17 @@ jobs:
             # 从README.md提取仓库链接并添加为子模块
             cat README.md | grep -A 100 "$section_title" | grep -A 100 "\`\`\`" | grep -B 100 "\`\`\`" | grep -E "^(https://github.com|git@github.com)" | while read -r repo; do
               if [ ! -z "$repo" ]; then
-                process_repo_url "$repo" "$dir"
+                # 特殊处理已知有嵌套子模块问题的仓库
+                if [[ "$repo" == *"bl4de/ctf"* ]]; then
+                  echo "特殊处理 bl4de/ctf 仓库，使用 --no-recursive 选项"
+                  process_repo_url "$repo" "$dir"
+                  # 如果添加成功，创建一个空的 .no-recursive 文件标记不要递归初始化
+                  if [ -d "$dir/ctf" ]; then
+                    touch "$dir/ctf/.no-recursive"
+                  fi
+                else
+                  process_repo_url "$repo" "$dir"
+                fi
               fi
             done
           done
@@ -110,8 +127,12 @@ jobs:
           # 只初始化直接子模块，不递归更新
           git submodule update --init --depth=1
           
-          # 对于每个子模块单独处理，避免递归错误
-          git submodule foreach 'git submodule update --init --depth=1 || true'
+          # 检查是否有嵌套子模块，但不尝试初始化它们
+          echo "检查嵌套子模块但不初始化它们"
+          git submodule foreach 'if [ -f .gitmodules ]; then echo "发现嵌套子模块在 $(pwd) 但不会初始化"; fi'
+          
+          # 禁用递归子模块初始化，避免缺少URL的错误
+          git config --global submodule.recurse false
           
       - name: 提交新增的子模块更改
         run: |
