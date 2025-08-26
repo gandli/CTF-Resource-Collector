@@ -88,7 +88,7 @@ jobs:
               mkdir -p "$target_dir"
               
               # 尝试添加子模块
-              error_output=$(git submodule add --depth=1 --no-recursive "$normalized_repo" "$target_dir/$repo_name" 2>&1)
+              error_output=$(git submodule add --depth=1 --no-recursive '$normalized_repo' '$target_dir/$repo_name' 2>&1)
               add_result=$?
               
               if [ $add_result -ne 0 ]; then
