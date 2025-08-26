@@ -79,22 +79,22 @@ jobs:
               echo "❌ 添加子模块失败: $repo_name"
             fi
           }
-          
+
           # 处理 Wiki 资源
           echo "=== 处理 Wiki 资源 ==="
           sed -n '/^## 1\. Wiki 资源$/,/^## 2\. Writeups 资源$/p' README.md | grep '^https://github.com' | while read -r url; do
             process_repo "$url" "wiki"
           done
-          
+
           # 处理 Writeups 资源
           echo "=== 处理 Writeups 资源 ==="
           sed -n '/^## 2\. Writeups 资源$/,/^## 3\. Tools 工具$/p' README.md | grep '^https://github.com' | while read -r url; do
             process_repo "$url" "writeups"
           done
-          
+
           # 处理 Tools 工具
           echo "=== 处理 Tools 工具 ==="
-          sed -n '/^## 3\. Tools 工具$/,/^$/p' README.md | grep '^https://github.com' | while read -r url; do
+          sed -n '/^## 3\. Tools 工具$/,$p' README.md | grep '^https://github.com' | while read -r url; do
             process_repo "$url" "tools"
           done
 
