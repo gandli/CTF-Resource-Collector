@@ -52,9 +52,17 @@ git submodule status
 - 保持原始仓库的 Git 历史记录
 - 可以轻松切换到特定的提交或分支
 
-## 1. Writeups 资源
+> 注意：仓库链接支持多种格式，如 `https://github.com/username/repo.git`、`https://github.com/username/repo` 或 `git@github.com:username/repo.git`（SSH 格式），系统会自动处理。
 
-> 注意：仓库链接支持多种格式，如 `https://github.com/username/repo.git`、`https://github.com/username/repo` 或 `git@github.com:username/repo.git`（SSH格式），系统会自动处理。
+## 1. Wiki 资源
+
+```
+https://github.com/ctf-wiki/ctf-wiki.git
+https://github.com/Antel0p3/HITSZ-CTF-Wiki.git
+https://github.com/ReAbout/web-sec.git
+```
+
+## 2. Writeups 资源
 
 ```
 https://github.com/Jinmo/ctfs.git
@@ -71,12 +79,4 @@ https://github.com/AravGarg/CTFarchives.git
 https://github.com/datajerk/ctf-write-ups.git
 https://github.com/JiaweiHawk/pwn.git
 https://github.com/XDSEC/moeCTF_2021.git
-```
-
-## 2. Wiki 资源
-
-```
-https://github.com/ctf-wiki/ctf-wiki.git
-https://github.com/Antel0p3/HITSZ-CTF-Wiki.git
-https://github.com/ReAbout/web-sec.git
 ```
