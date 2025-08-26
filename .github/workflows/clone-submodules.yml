@@ -12,7 +12,7 @@ on:
     - cron: "0 0 * * 1"
 
 jobs:
-  克隆仓库:
+  clone-repos:
     runs-on: ubuntu-latest
     permissions:
       contents: write
