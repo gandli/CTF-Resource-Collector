@@ -4,22 +4,22 @@
 
 ## 如何克隆本仓库
 
-递归克隆（推荐）​
+### 递归克隆（推荐）
 
-```
-#使用 --recursive参数，一次性克隆主仓库及其所有子模块
+```bash
+# 使用 --recursive参数，一次性克隆主仓库及其所有子模块
 git clone --recursive https://github.com/gandli/CTF-Resource-Collector.git
-或者
-# 浅克隆主仓库 + 子模块（仅最新提交）
+
+# 或者浅克隆主仓库 + 子模块（仅最新提交）
 git clone --recursive --depth 1 https://github.com/gandli/CTF-Resource-Collector.git
 ```
 
-分步克隆
+### 分步克隆
 
-```
+```bash
 # 1. 克隆主仓库（不包含子模块）
 git clone https://github.com/gandli/CTF-Resource-Collector.git
-cd repo
+cd CTF-Resource-Collector
 
 # 2. 初始化并拉取所有子模块
 git submodule init
@@ -28,6 +28,29 @@ git submodule update
 # 或者只拉取特定子模块
 git submodule update --init path/to/submodule
 ```
+
+### 子模块管理
+
+```bash
+# 更新所有子模块到最新版本
+git submodule update --remote
+
+# 更新特定子模块
+git submodule update --remote writeups/ctfs
+
+# 查看子模块状态
+git submodule status
+```
+
+### 子模块的优势
+
+使用 Git 子模块有以下优势：
+
+- 可以将每个 CTF 资源库作为独立的子模块管理
+- 方便更新：只需运行 `git submodule update --remote` 即可更新所有子模块
+- 可以选择性克隆特定的子模块，节省空间和时间
+- 保持原始仓库的 Git 历史记录
+- 可以轻松切换到特定的提交或分支
 
 ## 1. Writeups 资源
 
