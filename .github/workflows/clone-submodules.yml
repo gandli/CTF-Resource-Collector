@@ -1,4 +1,4 @@
-name: 收集CTF资源
+name: 收集
 
 on:
   push:
@@ -83,14 +83,27 @@ jobs:
             else
               # 添加子模块时禁用递归，避免嵌套子模块问题
               echo "执行: git submodule add --depth=1 --no-recursive $normalized_repo $target_dir/$repo_name"
-              git submodule add --depth=1 --no-recursive $normalized_repo $target_dir/$repo_name
+              
+              # 确保目标目录存在
+              mkdir -p "$target_dir"
+              
+              # 尝试添加子模块
+              error_output=$(git submodule add --depth=1 --no-recursive "$normalized_repo" "$target_dir/$repo_name" 2>&1)
               add_result=$?
               
               if [ $add_result -ne 0 ]; then
-                echo "添加 $repo_name 失败，可能已存在或无效"
+                echo "添加 $repo_name 失败，错误信息:"
+                echo "$error_output"
+                
                 # 检查是否是因为嵌套子模块问题导致的失败
                 if [ -d "$target_dir/$repo_name" ] && [ -f "$target_dir/$repo_name/.gitmodules" ]; then
                   echo "警告: $repo_name 包含嵌套子模块，这可能导致问题"
+                fi
+                
+                # 检查是否是因为子模块已存在
+                if grep -q "already exists" /tmp/submodule_error.log; then
+                  echo "子模块 $repo_name 已存在，尝试更新"
+                  git submodule update --init --depth=1 "$target_dir/$repo_name" || echo "更新子模块失败"
                 fi
               else
                 echo "成功添加子模块: $repo_name 到 $target_dir/"
@@ -104,7 +117,7 @@ jobs:
             ["wiki"]="1. Wiki 资源"
             ["tools"]="3. Tools 工具"
           )
-          
+
           # 处理每种资源类型
           for dir in "${!resource_configs[@]}"; do
             section_title="${resource_configs[$dir]}"
@@ -122,8 +135,16 @@ jobs:
               repo_links=$(cat README.md | grep -A 100 "$section_title" | grep -A 100 "\`\`\`" | grep -B 100 "\`\`\`" | grep -E "^(https://github.com|git@github.com)")
             fi
             
-            # 清理链接，移除可能的反引号
-            repo_links=$(echo "$repo_links" | tr -d '`')
+            # 如果是 tools 目录，手动添加 awesome-mcp-security 仓库
+            if [ "$dir" = "tools" ]; then
+              echo "为 tools 目录添加 awesome-mcp-security 仓库"
+              if ! echo "$repo_links" | grep -q "awesome-mcp-security"; then
+                repo_links="$repo_links\nhttps://github.com/Puliczek/awesome-mcp-security.git"
+              fi
+            fi
+            
+            # 清理链接，移除可能的反引号和空白字符
+            repo_links=$(echo "$repo_links" | tr -d '`' | sed 's/^[ \t]*//;s/[ \t]*$//')
             
             # 显示找到的链接
             echo "找到以下仓库链接:"
@@ -160,19 +181,19 @@ jobs:
             echo ".gitmodules 文件内容:"
             cat .gitmodules
           fi
-          
+
           # 强制初始化直接子模块，不递归更新
           echo "初始化直接子模块..."
           git submodule init
           git submodule update --depth=1
-          
+
           # 检查是否有嵌套子模块，但不尝试初始化它们
           echo "检查嵌套子模块但不初始化它们"
           git submodule foreach 'if [ -f .gitmodules ]; then echo "发现嵌套子模块在 $(pwd) 但不会初始化"; fi'
-          
+
           # 禁用递归子模块初始化，避免缺少URL的错误
           git config --global submodule.recurse false
-          
+
           # 对于没有标记为 .no-recursive 的子模块，尝试安全地初始化其子模块
           echo "安全地初始化没有标记为 .no-recursive 的子模块的嵌套子模块"
           git submodule foreach '
@@ -181,11 +202,11 @@ jobs:
               git submodule update --init --depth=1 || echo "初始化 $(pwd) 的子模块失败，但继续处理"
             fi
           '
-          
+
           # 显示子模块状态
           echo "子模块状态:"
           git submodule status
-          
+
       - name: 清理问题子模块
         run: |
           # 检查是否有问题子模块（缺少URL的子模块）
@@ -195,7 +216,7 @@ jobs:
               echo "$path"
             fi
           done)
-          
+
           # 如果有问题子模块，从.gitmodules中移除它们
           if [ ! -z "$problem_submodules" ]; then
             echo "发现以下问题子模块（缺少URL）:"
@@ -216,7 +237,7 @@ jobs:
           # 显示子模块状态
           echo "当前子模块状态:"
           git submodule status
-          
+
           # 检查是否有.gitmodules文件
           if [ -f ".gitmodules" ]; then
             echo ".gitmodules 文件内容:"
@@ -225,16 +246,16 @@ jobs:
             echo "警告: .gitmodules 文件不存在，尝试强制创建"
             touch .gitmodules
           fi
-          
+
           # 检查工作目录状态
           echo "Git 状态:"
           git status
-          
+
           # 强制添加所有更改，包括子模块
           echo "添加所有更改到暂存区..."
           git add -A
           git add .gitmodules
-          
+
           # 提交更改
           if [[ -n "$(git status --porcelain)" ]]; then
             echo "检测到更改，正在提交..."
