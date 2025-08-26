@@ -1,0 +1,3 @@
+[submodule "tools/awesome-mcp-security"]
+	path = tools/awesome-mcp-security
+	url = https://github.com/Puliczek/awesome-mcp-security.git
