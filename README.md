@@ -84,11 +84,16 @@ https://github.com/Ignitetechnologies/HackTheBox-CTF-Writeups.git
 https://github.com/susers/Writeups.git
 https://github.com/bl4de/ctf.git
 https://github.com/testert1ng/hacker101-ctf.git
+https://github.com/balsn/ctf_writeup.git
+https://github.com/shiltemann/CTF-writeups-public.git
+https://github.com/USTC-Hackergame/hackergame2020-writeups.git
+https://github.com/USTC-Hackergame/hackergame2021-writeups.git
+https://github.com/USTC-Hackergame/hackergame2022-writeups.git
+https://github.com/USTC-Hackergame/hackergame2023-writeups.git
+https://github.com/USTC-Hackergame/hackergame2024-writeups.git
 ```
 
 ## 3. Tools 工具
-
-> 注意：仓库链接支持多种格式，如 `https://github.com/username/repo.git`、`https://github.com/username/repo` 或 `git@github.com:username/repo.git`（SSH格式），系统会自动处理。
 
 ```
 https://github.com/Puliczek/awesome-mcp-security.git
