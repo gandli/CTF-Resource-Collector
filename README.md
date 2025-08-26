@@ -54,6 +54,8 @@ git submodule status
 
 ## 1. Writeups 资源
 
+> 注意：仓库链接支持多种格式，如 `https://github.com/username/repo.git` 或 `https://github.com/username/repo`，系统会自动处理。
+
 ```
 https://github.com/Jinmo/ctfs.git
 https://github.com/pwning/public-writeup.git

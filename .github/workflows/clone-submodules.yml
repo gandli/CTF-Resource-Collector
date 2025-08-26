@@ -40,14 +40,24 @@ jobs:
             if [ ! -z "$repo" ]; then
               # 清理URL，确保格式正确
               repo=$(echo $repo | tr -d '\r' | tr -d '\n' | tr -d ' ')
-              repo_name=$(echo $repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
-              echo "Adding $repo_name from $repo as submodule"
               
-              # 检查子模块是否已存在
-              if grep -q "$repo" .gitmodules 2>/dev/null; then
+              # 标准化URL格式，确保以.git结尾
+              if [[ ! "$repo" =~ \.git$ ]]; then
+                normalized_repo="${repo}.git"
+              else
+                normalized_repo="$repo"
+              fi
+              
+              # 提取仓库名称（不带.git后缀）
+              repo_name=$(echo $normalized_repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
+              echo "Adding $repo_name from $normalized_repo as submodule"
+              
+              # 检查子模块是否已存在（考虑不同URL格式）
+              repo_without_git=$(echo $normalized_repo | sed 's/.git$//')
+              if grep -q "$normalized_repo" .gitmodules 2>/dev/null || grep -q "$repo_without_git" .gitmodules 2>/dev/null; then
                 echo "Submodule $repo_name already exists, skipping"
               else
-                git submodule add --depth=1 $repo writeups/$repo_name || echo "Failed to add $repo_name, may already exist or invalid"
+                git submodule add --depth=1 $normalized_repo writeups/$repo_name || echo "Failed to add $repo_name, may already exist or invalid"
               fi
             fi
           done
@@ -59,19 +69,24 @@ jobs:
             if [ ! -z "$repo" ]; then
               # 清理URL，确保格式正确
               repo=$(echo $repo | tr -d '\r' | tr -d '\n' | tr -d ' ')
-              # 确保URL以.git结尾
+              
+              # 标准化URL格式，确保以.git结尾
               if [[ ! "$repo" =~ \.git$ ]]; then
-                repo="${repo}.git"
+                normalized_repo="${repo}.git"
+              else
+                normalized_repo="$repo"
               fi
               
-              repo_name=$(echo $repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
-              echo "Adding $repo_name from $repo as submodule"
+              # 提取仓库名称（不带.git后缀）
+              repo_name=$(echo $normalized_repo | awk -F'/' '{print $NF}' | sed 's/.git$//')
+              echo "Adding $repo_name from $normalized_repo as submodule"
               
-              # 检查子模块是否已存在
-              if grep -q "$repo" .gitmodules 2>/dev/null; then
+              # 检查子模块是否已存在（考虑不同URL格式）
+              repo_without_git=$(echo $normalized_repo | sed 's/.git$//')
+              if grep -q "$normalized_repo" .gitmodules 2>/dev/null || grep -q "$repo_without_git" .gitmodules 2>/dev/null; then
                 echo "Submodule $repo_name already exists, skipping"
               else
-                git submodule add --depth=1 $repo wiki/$repo_name || echo "Failed to add $repo_name, may already exist or invalid"
+                git submodule add --depth=1 $normalized_repo wiki/$repo_name || echo "Failed to add $repo_name, may already exist or invalid"
               fi
             fi
           done
